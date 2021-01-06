@@ -1,0 +1,154 @@
+#***************************************
+#SELENIUM EVENT BUS
+#***************************************
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "selenium.fullname" . }}-event-bus
+  labels:
+    app.kubernetes.io/name: {{ include "selenium.name" . }}-event-bus
+    {{- include "selenium.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.event_bus.service.type }}
+  selector:
+    app.kubernetes.io/name: {{ include "selenium.name" . }}-event-bus
+    {{- include "selenium.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: port1
+      protocol: TCP
+      port: 4442
+      targetPort: 4442
+    - name: port2
+      protocol: TCP
+      port: 4443
+      targetPort: 4443
+    - name: port3
+      protocol: TCP
+      port: 5557
+      targetPort: 5557
+---
+#***************************************
+#SELENIUM SESSIONS MAP
+#***************************************
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "selenium.fullname" . }}-sessions
+  labels:
+    app.kubernetes.io/name: {{ include "selenium.name" . }}-sessions
+    {{- include "selenium.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.sessions.service.type }}
+  selector:
+    app.kubernetes.io/name: {{ include "selenium.name" . }}-sessions
+    {{- include "selenium.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: port1
+      protocol: TCP
+      port: 5556
+      targetPort: 5556
+---
+#***************************************
+#SELENIUM SESSION QUEUER
+#***************************************
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "selenium.fullname" . }}-queuer
+  labels:
+    app.kubernetes.io/name: {{ include "selenium.name" . }}-queuer
+    {{- include "selenium.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.queuer.service.type }}
+  selector:
+    app.kubernetes.io/name: {{ include "selenium.name" . }}-queuer
+    {{- include "selenium.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: port1
+      protocol: TCP
+      port: 5559
+      targetPort: 55569
+---
+#***************************************
+#SELENIUM DISTRIBUTOR
+#***************************************
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "selenium.fullname" . }}-distributor
+  labels:
+    app.kubernetes.io/name: {{ include "selenium.name" . }}-distributor
+    {{- include "selenium.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.queuer.service.type }}
+  selector:
+    app.kubernetes.io/name: {{ include "selenium.name" . }}-distributor
+    {{- include "selenium.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: port1
+      protocol: TCP
+      port: 5553
+      targetPort: 5553
+---
+#***************************************
+#SELENIUM ROUTER
+#***************************************
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "selenium.fullname" . }}-router
+  labels:
+    app.kubernetes.io/name: {{ include "selenium.name" . }}-router
+    {{- include "selenium.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.router.service.type }}
+  selector:
+    app.kubernetes.io/name: {{ include "selenium.name" . }}-router
+    {{- include "selenium.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: web
+      protocol: TCP
+      port: {{ .Values.router.service.port }}
+      targetPort: 4444
+---
+#***************************************
+#SELENIUM CHROME NODE
+#***************************************
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "selenium.fullname" . }}-chrome-node
+  labels:
+    app.kubernetes.io/name: {{ include "selenium.name" . }}-chrome-node
+    {{- include "selenium.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.chrome_node.service.type }}
+  selector:
+    app.kubernetes.io/name: {{ include "selenium.name" . }}-chrome-node
+    {{- include "selenium.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: port1
+      protocol: TCP
+      port: 6900
+      targetPort: 5900
+---
+#***************************************
+#SELENIUM FIREFOX NODE
+#***************************************
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "selenium.fullname" . }}-firefox-node
+  labels:
+    app.kubernetes.io/name: {{ include "selenium.name" . }}-firefox-node
+    {{- include "selenium.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.firefox_node.service.type }}
+  selector:
+    app.kubernetes.io/name: {{ include "selenium.name" . }}-firefox-node
+    {{- include "selenium.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: port1
+      protocol: TCP
+      port: 6900
+      targetPort: 5900

@@ -1,0 +1,7 @@
+apiVersion: v2
+name: selenium
+description: Chart for Selenium Grid
+
+type: application
+version: 0.1.0
+appVersion: 4.0.0-alpha-7-20201119

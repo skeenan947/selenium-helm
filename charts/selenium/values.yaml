@@ -1,0 +1,133 @@
+# Default values for selenium.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+
+podSecurityContext: {}
+securityContext: {}
+
+ingress:
+  enabled: false
+  annotations: {}
+  hosts:
+    - host: selenium-router.local
+      paths:
+        - /wd/hub
+  tls: []
+
+event_bus:
+  service:
+    type: ClusterIP
+
+  replicaCount: 1
+  image:
+    repository: selenium/event-bus
+    tag: 4.0.0-alpha-7-20201119
+    pullPolicy: IfNotPresent
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+sessions:
+  service:
+    type: ClusterIP
+
+  replicaCount: 1
+  image:
+    repository: selenium/sessions
+    tag: 4.0.0-alpha-7-20201119
+    pullPolicy: IfNotPresent
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+queuer:
+  service:
+    type: ClusterIP
+
+  replicaCount: 1
+  image:
+    repository: selenium/session-queuer
+    tag: 4.0.0-alpha-7-20201119
+    pullPolicy: IfNotPresent
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+distributor:
+  service:
+    type: ClusterIP
+
+  replicaCount: 1
+  image:
+    repository: selenium/distributor
+    tag: 4.0.0-alpha-7-20201119
+    pullPolicy: IfNotPresent
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+router:
+  service:
+    type: ClusterIP
+    port: 4444
+
+  replicaCount: 1
+  image:
+    repository: selenium/router
+    tag: 4.0.0-alpha-7-20201119
+    pullPolicy: IfNotPresent
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+chrome_node:
+  service:
+    type: ClusterIP
+
+  replicaCount: 1
+  image:
+    repository: selenium/node-chrome
+    tag: 4.0.0-alpha-7-20201119
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "1"
+    limits:
+      memory: "1Gi"
+      cpu: "1"
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+firefox_node:
+  service:
+    type: ClusterIP
+
+  replicaCount: 1
+  image:
+    repository: selenium/node-firefox
+    tag: 4.0.0-alpha-7-20201119
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "1"
+    limits:
+      memory: "1Gi"
+      cpu: "1"
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "selenium.fullname" . }}-test-connection"
+  labels:
+    {{- include "selenium.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test-success
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['{{ include "selenium.fullname" . }}-router:{{ .Values.router.service.port }}']
+  restartPolicy: Never

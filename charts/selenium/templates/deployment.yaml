@@ -1,0 +1,448 @@
+#***************************************
+#SELENIUM EVENT BUS
+#***************************************
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "selenium.fullname" . }}-event-bus
+  labels:
+    app.kubernetes.io/name: {{ include "selenium.name" . }}-event-bus
+    {{- include "selenium.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "selenium.name" . }}-event-bus
+      {{- include "selenium.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "selenium.name" . }}-event-bus
+        {{- include "selenium.selectorLabels" . | nindent 8 }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: {{ include "selenium.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}-event-bus
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.event_bus.image.repository }}:{{ .Values.event_bus.image.tag }}"
+          imagePullPolicy: {{ .Values.event_bus.image.pullPolicy }}
+          ports:
+            - containerPort: 4442
+              protocol: TCP
+            - containerPort: 4443
+              protocol: TCP
+            - containerPort: 5557
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.event_bus.resources | nindent 12 }}
+    {{- with .Values.event_bus.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.event_bus.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.event_bus.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+
+---
+#***************************************
+#SELENIUM SESSIONS MAP
+#***************************************
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "selenium.fullname" . }}-sessions
+  labels:
+    app.kubernetes.io/name: {{ include "selenium.name" . }}-sessions
+    {{- include "selenium.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "selenium.name" . }}-sessions
+      {{- include "selenium.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "selenium.name" . }}-sessions
+        {{- include "selenium.selectorLabels" . | nindent 8 }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: {{ include "selenium.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}-sessions
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.sessions.image.repository }}:{{ .Values.sessions.image.tag }}"
+          imagePullPolicy: {{ .Values.sessions.image.pullPolicy }}
+          env:
+            - name: SE_EVENT_BUS_HOST
+              value: "selenium-event-bus"
+            - name: SE_EVENT_BUS_PUBLISH_PORT
+              value: "4442"
+            - name: SE_EVENT_BUS_SUBSCRIBE_PORT
+              value: "4443"
+          ports:
+            - containerPort: 5556
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.sessions.resources | nindent 12 }}
+    {{- with .Values.sessions.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.sessions.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.sessions.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+
+---
+#***************************************
+#SELENIUM SESSION QUEUER
+#***************************************
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "selenium.fullname" . }}-queuer
+  labels:
+    app.kubernetes.io/name: {{ include "selenium.name" . }}-queuer
+    {{- include "selenium.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "selenium.name" . }}-queuer
+      {{- include "selenium.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "selenium.name" . }}-queuer
+        {{- include "selenium.selectorLabels" . | nindent 8 }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: {{ include "selenium.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}-queuer
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.queuer.image.repository }}:{{ .Values.queuer.image.tag }}"
+          imagePullPolicy: {{ .Values.queuer.image.pullPolicy }}
+          env:
+            - name: SE_EVENT_BUS_HOST
+              value: "selenium-event-bus"
+            - name: SE_EVENT_BUS_PUBLISH_PORT
+              value: "4442"
+            - name: SE_EVENT_BUS_SUBSCRIBE_PORT
+              value: "4443"
+          ports:
+            - containerPort: 5556
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.queuer.resources | nindent 12 }}
+    {{- with .Values.queuer.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.queuer.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.queuer.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+
+---
+#***************************************
+#SELENIUM DISTRIBUTOR
+#***************************************
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "selenium.fullname" . }}-distributor
+  labels:
+    app.kubernetes.io/name: {{ include "selenium.name" . }}-distributor
+    {{- include "selenium.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "selenium.name" . }}-distributor
+      {{- include "selenium.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "selenium.name" . }}-distributor
+        {{- include "selenium.selectorLabels" . | nindent 8 }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: {{ include "selenium.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}-distributor
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.distributor.image.repository }}:{{ .Values.distributor.image.tag }}"
+          imagePullPolicy: {{ .Values.distributor.image.pullPolicy }}
+          env:
+            - name: SE_EVENT_BUS_HOST
+              value: "selenium-event-bus"
+            - name: SE_EVENT_BUS_PUBLISH_PORT
+              value: "4442"
+            - name: SE_EVENT_BUS_SUBSCRIBE_PORT
+              value: "4443"
+            - name: SE_SESSIONS_MAP_HOST
+              value: "selenium-sessions"
+            - name: SE_SESSIONS_MAP_PORT
+              value: "5556"
+            - name: SE_SESSION_QUEUER_HOST
+              value: "selenium-queuer"
+            - name: SE_SESSION_QUEUER_PORT
+              value: "5559"
+          ports:
+            - containerPort: 5553
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.distributor.resources | nindent 12 }}
+    {{- with .Values.distributor.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.distributor.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.distributor.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+
+---
+#***************************************
+#SELENIUM ROUTER
+#***************************************
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "selenium.fullname" . }}-router
+  labels:
+    app.kubernetes.io/name: {{ include "selenium.name" . }}-router
+    {{- include "selenium.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "selenium.name" . }}-router
+      {{- include "selenium.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "selenium.name" . }}-router
+        {{- include "selenium.selectorLabels" . | nindent 8 }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: {{ include "selenium.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}-router
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.router.image.repository }}:{{ .Values.router.image.tag }}"
+          imagePullPolicy: {{ .Values.router.image.pullPolicy }}
+          env:
+            - name: SE_DISTRIBUTOR_HOST
+              value: "selenium-distributor"
+            - name: SE_DISTRIBUTOR_PORT
+              value: "5553"
+            - name: SE_SESSIONS_MAP_HOST
+              value: "selenium-sessions"
+            - name: SE_SESSIONS_MAP_PORT
+              value: "5556"
+            - name: SE_SESSION_QUEUER_HOST
+              value: "selenium-queuer"
+            - name: SE_SESSION_QUEUER_PORT
+              value: "5559"
+          ports:
+            - containerPort: 4444
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.router.resources | nindent 12 }}
+    {{- with .Values.router.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.router.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.router.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+
+---
+#***************************************
+#SELENIUM CHROME NODE
+#***************************************
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "selenium.fullname" . }}-chrome-node
+  labels:
+    app.kubernetes.io/name: {{ include "selenium.name" . }}-chrome-node
+    {{- include "selenium.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "selenium.name" . }}-chrome-node
+      {{- include "selenium.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "selenium.name" . }}-chrome-node
+        {{- include "selenium.selectorLabels" . | nindent 8 }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: {{ include "selenium.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}-chrome-node
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.chrome_node.image.repository }}:{{ .Values.chrome_node.image.tag }}"
+          imagePullPolicy: {{ .Values.chrome_node.image.pullPolicy }}
+          env:
+            - name: SE_EVENT_BUS_HOST
+              value: "selenium-event-bus"
+            - name: SE_EVENT_BUS_PUBLISH_PORT
+              value: "4442"
+            - name: SE_EVENT_BUS_SUBSCRIBE_PORT
+              value: "4443"
+          ports:
+            - containerPort: 5553
+              protocol: TCP
+          volumeMounts:
+            - name: dshm
+              mountPath: /dev/shm
+          resources:
+            {{- toYaml .Values.chrome_node.resources | nindent 12 }}
+    {{- with .Values.chrome_node.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.chrome_node.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.chrome_node.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      volumes:
+        - name: dshm
+          emptyDir: { "medium": "Memory" }
+
+---
+#***************************************
+#SELENIUM FIREFOX NODE
+#***************************************
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "selenium.fullname" . }}-firefox-node
+  labels:
+    app.kubernetes.io/name: {{ include "selenium.name" . }}-firefox-node
+    {{- include "selenium.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "selenium.name" . }}-firefox-node
+      {{- include "selenium.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "selenium.name" . }}-firefox-node
+        {{- include "selenium.selectorLabels" . | nindent 8 }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: {{ include "selenium.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}-firefox-node
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.firefox_node.image.repository }}:{{ .Values.firefox_node.image.tag }}"
+          imagePullPolicy: {{ .Values.firefox_node.image.pullPolicy }}
+          env:
+            - name: SE_EVENT_BUS_HOST
+              value: "selenium-event-bus"
+            - name: SE_EVENT_BUS_PUBLISH_PORT
+              value: "4442"
+            - name: SE_EVENT_BUS_SUBSCRIBE_PORT
+              value: "4443"
+          ports:
+            - containerPort: 5553
+              protocol: TCP
+          volumeMounts:
+            - name: dshm
+              mountPath: /dev/shm
+          resources:
+            {{- toYaml .Values.firefox_node.resources | nindent 12 }}
+    {{- with .Values.firefox_node.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.firefox_node.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.firefox_node.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      volumes:
+        - name: dshm
+          emptyDir: { "medium": "Memory" }
